@@ -1,5 +1,6 @@
 {
     "name": "linepogl/from",
+    "version": "0.1",
     "description": "A php library for iterables",
     "type": "library",
     "license": "MIT",
