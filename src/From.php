@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace From;
 
-final class From implements \IteratorAggregate
+class From implements \IteratorAggregate
 {
-    private readonly \Traversable $iterator;
+    protected readonly \Traversable $iterator;
 
     public function __construct(mixed $input)
     {
@@ -260,5 +260,10 @@ final class From implements \IteratorAggregate
         }
 
         return $r;
+    }
+
+    public function orderBy(callable $mapper, bool $desc = false): OrderedFrom
+    {
+        return new OrderedFrom($this, $mapper, $desc);
     }
 }
