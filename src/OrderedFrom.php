@@ -1,18 +1,36 @@
 <?php
+
 declare(strict_types=1);
 
 namespace From;
 
+/**
+ * @template TKey of int|string
+ * @template TValue
+ * @template-extends From<TKey, TValue>
+ */
 final class OrderedFrom extends From
 {
+    /**
+     * @var array<(callable(array<TKey, TValue>&):void)> $sorters
+     */
     private readonly array $sorters;
 
-    public function __construct(private readonly From $inner, callable $mapper, bool $desc = false, array $sorters = [])
+    /**
+     * @template TComparable
+     * @param From<TKey, TValue> $inner
+     * @param callable(TValue, TKey): TComparable $hasher
+     * @param bool $desc
+     * @param array<(callable(array<TKey, TValue>&):void)> $sorters
+     */
+    public function __construct(private readonly From $inner, callable $hasher, bool $desc = false, array $sorters = [])
     {
-        $this->sorters = array_merge([function (array &$a) use ($mapper, $desc) {
-            uksort($a, $desc
-                ? fn($k1, $k2) => $mapper($a[$k2], $k2) <=> $mapper($a[$k1], $k1)
-                : fn($k1, $k2) => $mapper($a[$k1], $k1) <=> $mapper($a[$k2], $k2)
+        $this->sorters = array_merge([static function (array &$a) use ($hasher, $desc) {
+            uksort(
+                $a,
+                $desc
+                ? static fn ($k1, $k2) => $hasher($a[$k2], $k2) <=> $hasher($a[$k1], $k1)
+                : static fn ($k1, $k2) => $hasher($a[$k1], $k1) <=> $hasher($a[$k2], $k2),
             );
         }], $sorters);
 
@@ -27,8 +45,13 @@ final class OrderedFrom extends From
         })());
     }
 
-    public function thenBy(callable $mapper, bool $desc = false): self
+    /**
+     * @template TComparable
+     * @param callable(TValue, TKey): TComparable $hasher
+     * @return OrderedFrom<TKey, TValue>
+     */
+    public function thenBy(callable $hasher, bool $desc = false): self
     {
-        return new self($this->inner, $mapper, $desc, $this->sorters);
+        return new self($this->inner, $hasher, $desc, $this->sorters);
     }
 }

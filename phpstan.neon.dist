@@ -1,0 +1,11 @@
+parameters:
+  parallel:
+  	maximumNumberOfProcesses: 4
+  	minimumNumberOfJobsPerProcess: 1
+  level: 9
+  paths:
+    - src
+    - tst
+  fileExtensions:
+    - php
+  tmpDir: var/cache/.phpstan

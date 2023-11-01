@@ -1,32 +1,53 @@
 <?php
+
 declare(strict_types=1);
 
 namespace From;
 
-class From implements \IteratorAggregate
-{
-    protected readonly \Traversable $iterator;
+use ArrayIterator;
+use InvalidArgumentException;
+use IteratorAggregate;
+use Traversable;
 
-    public function __construct(mixed $input)
+/**
+ * @template TKey of int|string
+ * @template TValue
+ * @template-implements IteratorAggregate<TKey, TValue>
+ */
+class From implements IteratorAggregate
+{
+    /** @var Traversable<TKey, TValue> */
+    protected readonly Traversable $iterator;
+
+    /**
+     * @param iterable<TKey, TValue> $input
+     */
+    public function __construct(iterable $input)
     {
         if (is_array($input)) {
-            $it = new \ArrayIterator($input);
-        } elseif ($input instanceof \IteratorAggregate) {
+            $it = new ArrayIterator($input);
+        } elseif ($input instanceof IteratorAggregate) {
             $it = $input->getIterator();
-        } elseif ($input instanceof \Traversable) {
+        } elseif ($input instanceof Traversable) {
             $it = $input;
         } else {
-            throw new \InvalidArgumentException('Input must be array or Traversable.');
+            throw new InvalidArgumentException('Input must be array or Traversable.');
         }
 
         $this->iterator = $it;
     }
 
-    public function getIterator(): \Traversable
+    /**
+     * @return Traversable<TKey, TValue>
+     */
+    public function getIterator(): Traversable
     {
         return $this->iterator;
     }
 
+    /**
+     * @return array<TKey, TValue>
+     */
     public function toArray(): array
     {
         $r = [];
@@ -37,11 +58,20 @@ class From implements \IteratorAggregate
         return $r;
     }
 
+    /**
+     * @return self<TKey, TValue>
+     */
     public function evaluate(): self
     {
-        return $this->iterator instanceof \ArrayIterator ? $this : new self($this->toArray());
+        return $this->iterator instanceof ArrayIterator ? $this : new self($this->toArray());
     }
 
+    /**
+     * @template TResult
+     * @param callable(TValue, TKey): TResult $mapper
+     * @param ?callable(TValue, TKey): (string|int) $keyMapper:
+     * @return self<TKey, TResult>
+     */
     public function map(callable $mapper, ?callable $keyMapper = null): self
     {
         return new self((function () use ($mapper, $keyMapper): iterable {
@@ -57,6 +87,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param callable(TValue, TKey): TKey $keyMapper:
+     * @return self<TKey, TValue>
+     */
     public function mapKeys(callable $keyMapper): self
     {
         return new self((function () use ($keyMapper): iterable {
@@ -66,6 +100,9 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @return self<int, TValue>
+     */
     public function values(): self
     {
         return new self((function (): iterable {
@@ -75,6 +112,9 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @return self<int, TKey>
+     */
     public function keys(): self
     {
         return new self((function (): iterable {
@@ -84,6 +124,11 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @template TResult
+     * @param callable(TValue, TKey): TResult $mapper
+     * @return self<int, TResult>
+     */
     public function flatMap(callable $mapper): self
     {
         return new self((function () use ($mapper): iterable {
@@ -96,6 +141,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param iterable<TKey, TValue> $other
+     * @return self<TKey, TValue>
+     */
     public function merge(iterable $other): self
     {
         return new self((function () use ($other): iterable {
@@ -118,6 +167,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param TValue $element
+     * @return self<TKey, TValue>
+     */
     public function append(mixed $element): self
     {
         return new self((function () use ($element): iterable {
@@ -128,6 +181,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param callable(TValue, TKey): bool $predicate
+     * @return self<TKey, TValue>
+     */
     public function filter(callable $predicate): self
     {
         return new self((function () use ($predicate): iterable {
@@ -139,6 +196,9 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @return self<TKey, TValue>
+     */
     public function compact(): self
     {
         return new self((function (): iterable {
@@ -150,6 +210,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param callable(TValue, TKey): bool $predicate
+     * @return self<TKey, TValue>
+     */
     public function reject(callable $predicate): self
     {
         return new self((function () use ($predicate): iterable {
@@ -161,12 +225,18 @@ class From implements \IteratorAggregate
         })());
     }
 
-    public function unique(): self
+    /**
+     * @param ?callable(TValue, TKey): (string|int) $hasher
+     * @return self<TKey, TValue>
+     */
+    public function unique(?callable $hasher = null): self
     {
-        return new self((function (): iterable {
+        $hasher ??= static fn ($value) => is_int($value) ? $value : strval($value);
+
+        return new self((function () use ($hasher): iterable {
             $seen = [];
             foreach ($this->iterator as $key => $value) {
-                $hash = $value;
+                $hash = $hasher($value, $key);
                 if (!array_key_exists($hash, $seen)) {
                     $seen[$hash] = true;
                     yield $key => $value;
@@ -175,6 +245,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param int $howMany
+     * @return self<TKey, TValue>
+     */
     public function take(int $howMany): self
     {
         return new self((function () use ($howMany): iterable {
@@ -188,6 +262,10 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @param int $howMany
+     * @return self<TKey, TValue>
+     */
     public function skip(int $howMany): self
     {
         return new self((function () use ($howMany): iterable {
@@ -201,6 +279,9 @@ class From implements \IteratorAggregate
         })());
     }
 
+    /**
+     * @return ?TValue
+     */
     public function first(): mixed
     {
         foreach ($this->iterator as $value) {
@@ -210,6 +291,10 @@ class From implements \IteratorAggregate
         return null;
     }
 
+    /**
+     * @param callable(TValue, TKey): bool $predicate
+     * @return bool
+     */
     public function any(callable $predicate): bool
     {
         foreach ($this->iterator as $key => $value) {
@@ -221,6 +306,10 @@ class From implements \IteratorAggregate
         return false;
     }
 
+    /**
+     * @param callable(TValue, TKey): bool $predicate
+     * @return bool
+     */
     public function all(callable $predicate): bool
     {
         foreach ($this->iterator as $key => $value) {
@@ -232,6 +321,12 @@ class From implements \IteratorAggregate
         return true;
     }
 
+    /**
+     * @template TResult
+     * @param callable(TResult, TValue): TResult $operator
+     * @param TResult $default
+     * @return TResult
+     */
     public function reduce(callable $operator, mixed $default = null): mixed
     {
         $r = $default;
@@ -262,8 +357,13 @@ class From implements \IteratorAggregate
         return $r;
     }
 
-    public function orderBy(callable $mapper, bool $desc = false): OrderedFrom
+    /**
+     * @template TComparable
+     * @param callable(TValue, TKey): TComparable $hasher
+     * @return OrderedFrom<TKey, TValue>
+     */
+    public function orderBy(callable $hasher, bool $desc = false): OrderedFrom
     {
-        return new OrderedFrom($this, $mapper, $desc);
+        return new OrderedFrom($this, $hasher, $desc);
     }
 }

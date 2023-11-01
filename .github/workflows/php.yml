@@ -31,5 +31,11 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    - name: Run test suite
-      run: composer run-script test
+    - name: Code style
+      run: composer run-script phpcs
+
+    - name: Code static analyst
+      run: composer run-script phpstan
+
+    - name: Unit tests
+      run: composer run-script phpunit
