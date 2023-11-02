@@ -34,7 +34,7 @@ function iterable_to_iterator(iterable $input): Iterator
     } elseif ($input instanceof Iterator) {
         $it = $input;
     } elseif (is_callable($input)) {
-        $it = new LazyIterator($input);
+        $it = new LazyRewindableIterator($input);
     } else {
         throw new Exception('Cannot convert iterable to iterator');
     }

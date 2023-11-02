@@ -12,7 +12,7 @@ use RuntimeException;
  * @template TValue
  * @implements Iterator<TValue>
  */
-class LazyIterator implements Iterator
+class LazyRewindableIterator implements Iterator
 {
     /** @var callable(): iterable<TValue> */
     private readonly mixed $lazyIterable;

@@ -34,7 +34,7 @@ final class OrderedStream extends Stream implements OrderedStreamable
             );
         }], $sorters);
 
-        parent::__construct(new LazyIterator(function () {
+        parent::__construct(new LazyRewindableIterator(function () {
             $a = $this->inner->toArray();
             foreach ($this->sorters as $sorter) {
                 $sorter($a);

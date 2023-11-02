@@ -24,13 +24,15 @@ final class StreamTest extends TestCase
         $this->assertSame([1], Stream::empty()->append(1)->toArray());
     }
 
-    public function test_wrap(): void
+    public function test_lazy(): void
     {
-        $this->assertSame([1,2,3], Stream::wrap(function () {
+        $this->assertSame([1,2,3], Stream::lazy(function () {
             yield 1;
             yield 2;
             yield 3;
         })->toArray());
+        $this->assertSame([1,2,3], Stream::lazy(fn () => [1,2,3])->toArray());
+        $this->assertSame([1,2,3], Stream::lazy(fn () => from([1,2,3]))->toArray());
     }
 
     public function test_iterates_multiple_times(): void
@@ -204,6 +206,11 @@ final class StreamTest extends TestCase
     public function test_sum(): void
     {
         $this->assertSame(6.0, from([0, 1, 2, 3])->sum());
+    }
+    public function test_count(): void
+    {
+        $this->assertSame(4, from([0, 1, 2, 3])->count());
+        $this->assertSame(4, Stream::unfold(0, fn ($x) => $x)->take(4)->count());
     }
 
     public function test_order_by(): void

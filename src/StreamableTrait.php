@@ -38,7 +38,7 @@ trait StreamableTrait
      */
     public function map(callable $mapper, ?callable $keyMapper = null): Streamable
     {
-        return Stream::wrap(function () use ($mapper, $keyMapper): iterable {
+        return Stream::lazy(function () use ($mapper, $keyMapper): iterable {
             if ($keyMapper === null) {
                 foreach ($this->getIterator() as $key => $value) {
                     yield $key => $mapper($value, $key);
@@ -57,7 +57,7 @@ trait StreamableTrait
      */
     public function mapKeys(callable $keyMapper): Streamable
     {
-        return Stream::wrap(function () use ($keyMapper): iterable {
+        return Stream::lazy(function () use ($keyMapper): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 yield $keyMapper($value, $key) => $value;
             }
@@ -69,7 +69,7 @@ trait StreamableTrait
      */
     public function values(): Streamable
     {
-        return Stream::wrap(function (): iterable {
+        return Stream::lazy(function (): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 yield $value;
             }
@@ -81,7 +81,7 @@ trait StreamableTrait
      */
     public function keys(): Streamable
     {
-        return Stream::wrap(function (): iterable {
+        return Stream::lazy(function (): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 yield $key;
             }
@@ -95,7 +95,7 @@ trait StreamableTrait
      */
     public function flatMap(callable $mapper): Streamable
     {
-        return Stream::wrap(function () use ($mapper): iterable {
+        return Stream::lazy(function () use ($mapper): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 $inner = $mapper($value, $key);
                 foreach ($inner as $innerValue) {
@@ -111,7 +111,7 @@ trait StreamableTrait
      */
     public function merge(iterable $other): Streamable
     {
-        return Stream::wrap(function () use ($other): iterable {
+        return Stream::lazy(function () use ($other): iterable {
             $seen = [];
             foreach ($this->getIterator() as $key => $value) {
                 if (is_int($key)) {
@@ -137,7 +137,7 @@ trait StreamableTrait
      */
     public function append(mixed $element): Streamable
     {
-        return Stream::wrap(function () use ($element): iterable {
+        return Stream::lazy(function () use ($element): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 yield $key => $value;
             }
@@ -151,7 +151,7 @@ trait StreamableTrait
      */
     public function filter(callable $predicate): Streamable
     {
-        return Stream::wrap(function () use ($predicate): iterable {
+        return Stream::lazy(function () use ($predicate): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 if ($predicate($value, $key)) {
                     yield $key => $value;
@@ -165,7 +165,7 @@ trait StreamableTrait
      */
     public function compact(): Streamable
     {
-        return Stream::wrap(function (): iterable {
+        return Stream::lazy(function (): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 if ($value !== null) {
                     yield $key => $value;
@@ -180,7 +180,7 @@ trait StreamableTrait
      */
     public function reject(callable $predicate): Streamable
     {
-        return Stream::wrap(function () use ($predicate): iterable {
+        return Stream::lazy(function () use ($predicate): iterable {
             foreach ($this->getIterator() as $key => $value) {
                 if (!$predicate($value, $key)) {
                     yield $key => $value;
@@ -197,7 +197,7 @@ trait StreamableTrait
     {
         $hasher ??= static fn ($value) => is_int($value) ? $value : strval($value);
 
-        return Stream::wrap(function () use ($hasher): iterable {
+        return Stream::lazy(function () use ($hasher): iterable {
             $seen = [];
             foreach ($this->getIterator() as $key => $value) {
                 $hash = $hasher($value, $key);
@@ -215,7 +215,7 @@ trait StreamableTrait
      */
     public function take(int $howMany): Streamable
     {
-        return Stream::wrap(function () use ($howMany): iterable {
+        return Stream::lazy(function () use ($howMany): iterable {
             $index = 0;
             foreach ($this->getIterator() as $key => $value) {
                 if (++$index > $howMany) {
@@ -232,7 +232,7 @@ trait StreamableTrait
      */
     public function skip(int $howMany): Streamable
     {
-        return Stream::wrap(function () use ($howMany): iterable {
+        return Stream::lazy(function () use ($howMany): iterable {
             $index = 0;
             foreach ($this->getIterator() as $key => $value) {
                 if (++$index <= $howMany) {

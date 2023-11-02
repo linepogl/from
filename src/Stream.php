@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace From;
 
 use ArrayIterator;
-use Generator;
 use Iterator;
 
 /**
@@ -56,12 +55,12 @@ class Stream implements Streamable
 
     /**
      * @template TInputValue
-     * @param callable(): Generator<TInputValue> $generatorFunction
+     * @param callable(): iterable<TInputValue> $lazyIterableFunction
      * @return Streamable<TInputValue>
      */
-    public static function wrap(callable $generatorFunction): Streamable
+    public static function lazy(callable $lazyIterableFunction): Streamable
     {
-        return self::from(new LazyIterator($generatorFunction));
+        return self::from(new LazyRewindableIterator($lazyIterableFunction));
     }
 
     /**
@@ -81,7 +80,7 @@ class Stream implements Streamable
      */
     public static function unfold(mixed $firstElement, callable $getNext): Streamable
     {
-        return self::wrap(static function () use ($firstElement, $getNext): iterable {
+        return self::lazy(static function () use ($firstElement, $getNext): iterable {
             $i = 0;
             for ($x = $firstElement; ; $x = $getNext($x, $i++)) {
                 yield $x;
