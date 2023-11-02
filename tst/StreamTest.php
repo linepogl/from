@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use From\Stream;
 use PHPUnit\Framework\TestCase;
 
 use function From\from;
@@ -9,8 +10,36 @@ use function From\from;
 /**
  * @internal
  */
-final class FromTest extends TestCase
+final class StreamTest extends TestCase
 {
+    public function test_unfold(): void
+    {
+        $this->assertSame([0,1,2], Stream::unfold(0, fn ($x) => $x + 1)->take(3)->toArray());
+        $this->assertSame([-3,-3,-2], Stream::unfold(-3, fn ($x, $i) => $x + $i)->take(3)->toArray());
+    }
+
+    public function test_empty(): void
+    {
+        $this->assertSame([], Stream::empty()->toArray());
+        $this->assertSame([1], Stream::empty()->append(1)->toArray());
+    }
+
+    public function test_wrap(): void
+    {
+        $this->assertSame([1,2,3], Stream::wrap(function () {
+            yield 1;
+            yield 2;
+            yield 3;
+        })->toArray());
+    }
+
+    public function test_iterates_multiple_times(): void
+    {
+        $stream = from([0,1,2,3,4]);
+        $this->assertSame([0,1,2], $stream->take(3)->toArray());
+        $this->assertSame([0,1,2,3], $stream->take(4)->toArray());
+    }
+
     public function test_get_iterator(): void
     {
         $this->assertInstanceOf(\Traversable::class, from([0 => 'a', 1 => 'b'])->getIterator());
@@ -18,7 +47,7 @@ final class FromTest extends TestCase
 
     public function test_evaluate(): void
     {
-        $this->assertInstanceOf(\From\From::class, from([0 => 'a', 1 => 'b'])->evaluate());
+        $this->assertInstanceOf(\From\Stream::class, from([0 => 'a', 1 => 'b'])->evaluate());
     }
 
     public function test_map(): void
@@ -32,8 +61,8 @@ final class FromTest extends TestCase
 
     public function test_flat_map(): void
     {
-        $this->assertSame([], from([])->flatMap(fn ($x, $y): array => [$x + $y])->toArray());
-        $this->assertSame([2, 3, 4], array_values(from([1, 2, 3])->flatMap(fn ($x, $y): array => [$x + 1])->toArray()));
+        $this->assertSame([], from([])->flatMap(fn ($x, $y) => [$x + $y])->toArray());
+        $this->assertSame([2, 3, 4], array_values(from([1, 2, 3])->flatMap(fn ($x, $y) => [$x + 1])->toArray()));
     }
 
     public function test_map_keys(): void
@@ -235,5 +264,24 @@ final class FromTest extends TestCase
             'b' => ['a' => 2, 'b' => 30],
             'a' => ['a' => 9, 'b' => 10],
         ], from($a)->orderBy(fn ($x) => $x['a'])->thenBy(fn ($x, $k) => $k, desc: true)->toArray());
+    }
+
+    public function test_order_by_multiple_iterations(): void
+    {
+        $ordered = from([
+            'a' => ['a' => 9, 'b' => 10],
+            'b' => ['a' => 2, 'b' => 30],
+            'c' => ['a' => 2, 'b' => 1],
+        ])->orderBy(fn ($x) => $x['a'], desc: true)->thenBy(fn ($x) => $x['b'], desc: true);
+        $this->assertSame([
+            'a' => ['a' => 9, 'b' => 10],
+            'b' => ['a' => 2, 'b' => 30],
+            'c' => ['a' => 2, 'b' => 1],
+        ], $ordered->toArray());
+        $this->assertSame([
+            'a' => ['a' => 9, 'b' => 10],
+            'b' => ['a' => 2, 'b' => 30],
+            'c' => ['a' => 2, 'b' => 1],
+        ], $ordered->toArray());
     }
 }

@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace From;
 
 /**
- * @template TKey of int|string
  * @template TValue
- * @template-extends From<TKey, TValue>
+ * @extends Stream<TValue>
+ * @implements OrderedStreamable<TValue>
  */
-final class OrderedFrom extends From
+final class OrderedStream extends Stream implements OrderedStreamable
 {
     /**
-     * @var array<(callable(array<TKey, TValue>&):void)> $sorters
+     * @var array<(callable(array<TValue>&):void)> $sorters
      */
     private readonly array $sorters;
 
     /**
      * @template TComparable
-     * @param From<TKey, TValue> $inner
-     * @param callable(TValue, TKey): TComparable $hasher
+     * @param Streamable<TValue> $inner
+     * @param callable(TValue, mixed): TComparable $hasher
      * @param bool $desc
-     * @param array<(callable(array<TKey, TValue>&):void)> $sorters
+     * @param array<(callable(array<TValue>&):void)> $sorters
      */
-    public function __construct(private readonly From $inner, callable $hasher, bool $desc = false, array $sorters = [])
+    public function __construct(private readonly Streamable $inner, callable $hasher, bool $desc = false, array $sorters = [])
     {
         $this->sorters = array_merge([static function (array &$a) use ($hasher, $desc) {
             uksort(
@@ -34,7 +34,7 @@ final class OrderedFrom extends From
             );
         }], $sorters);
 
-        parent::__construct((function (): iterable {
+        parent::__construct(new LazyIterator(function () {
             $a = $this->inner->toArray();
             foreach ($this->sorters as $sorter) {
                 $sorter($a);
@@ -42,15 +42,15 @@ final class OrderedFrom extends From
             foreach ($a as $key => $value) {
                 yield $key => $value;
             }
-        })());
+        }));
     }
 
     /**
      * @template TComparable
-     * @param callable(TValue, TKey): TComparable $hasher
-     * @return OrderedFrom<TKey, TValue>
+     * @param callable(TValue, mixed): TComparable $hasher
+     * @return OrderedStreamable<TValue>
      */
-    public function thenBy(callable $hasher, bool $desc = false): self
+    public function thenBy(callable $hasher, bool $desc = false): OrderedStreamable
     {
         return new self($this->inner, $hasher, $desc, $this->sorters);
     }
