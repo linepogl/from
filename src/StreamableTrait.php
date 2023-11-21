@@ -349,10 +349,29 @@ trait StreamableTrait
     /**
      * @template TComparable
      * @param callable(TValue, mixed): TComparable $hasher
-     * @return OrderedStream<TValue>
+     * @return OrderedStreamable<TValue>
      */
-    public function orderBy(callable $hasher, bool $desc = false): OrderedStream
+    public function orderBy(callable $hasher, bool $desc = false): OrderedStreamable
     {
         return new OrderedStream($this, $hasher, $desc);
+    }
+
+    /**
+     * @param callable(TValue, mixed): mixed $hasher
+     * @return Streamable<Streamable<TValue>>
+     */
+    public function groupBy(callable $hasher): Streamable
+    {
+        return Stream::lazy(function () use ($hasher): iterable {
+            $a = [];
+            foreach ($this->getIterator() as $key => $value) {
+                $groupKey = $hasher($value, $key);
+                $a[$groupKey] ??= [];
+                $a[$groupKey][] = $value;
+            }
+            foreach ($a as $groupKey => $groupValues) {
+                yield $groupKey => Stream::from($groupValues);
+            }
+        });
     }
 }

@@ -291,4 +291,22 @@ final class StreamTest extends TestCase
             'c' => ['a' => 2, 'b' => 1],
         ], $ordered->toArray());
     }
+
+    public function test_group_by(): void
+    {
+        $a = [
+            'a' => ['a' => 1, 'b' => 2, 'c' => 1],
+            'b' => ['a' => 2, 'b' => 2, 'c' => 2],
+            'c' => ['a' => 2, 'b' => 3, 'c' => 3],
+        ];
+        $this->assertSame([
+            1 => [['a' => 1, 'b' => 2, 'c' => 1]],
+            2 => [['a' => 2, 'b' => 2, 'c' => 2], ['a' => 2, 'b' => 3, 'c' => 3]],
+        ], from($a)->groupBy(fn ($x) => $x['a'])->map(fn ($x) => $x->toArray())->toArray());
+        $this->assertSame([
+            2 => [['a' => 1, 'b' => 2, 'c' => 1], ['a' => 2, 'b' => 2, 'c' => 2]],
+            3 => [['a' => 2, 'b' => 3, 'c' => 3]],
+        ], from($a)->groupBy(fn ($x) => $x['b'])->map(fn ($x) => $x->toArray())->toArray());
+    }
+
 }

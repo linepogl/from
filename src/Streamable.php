@@ -130,7 +130,13 @@ interface Streamable extends IteratorAggregate
     /**
      * @template TComparable
      * @param callable(TValue, mixed): TComparable $hasher
-     * @return OrderedStream<TValue>
+     * @return OrderedStreamable<TValue>
      */
     public function orderBy(callable $hasher, bool $desc = false): OrderedStreamable;
+
+    /**
+     * @param callable(TValue, mixed): mixed $hasher
+     * @return Streamable<Streamable<TValue>>
+     */
+    public function groupBy(callable $hasher): Streamable;
 }
