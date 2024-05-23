@@ -8,6 +8,7 @@ use ArrayIterator;
 use Exception;
 use Iterator;
 use IteratorAggregate;
+use IteratorIterator;
 
 /**
  * @template TValue
@@ -28,17 +29,22 @@ function from(iterable $input): Stream
 function iterable_to_iterator(iterable $input): Iterator
 {
     if (is_array($input)) {
-        $it = new ArrayIterator($input);
-    } elseif ($input instanceof IteratorAggregate) {
-        $it = $input->getIterator();
-    } elseif ($input instanceof Iterator) {
-        $it = $input;
-    } elseif (is_callable($input)) {
-        $it = new LazyRewindableIterator($input);
-    } else {
-        throw new Exception('Cannot convert iterable to iterator');
+        return new ArrayIterator($input);
     }
 
-    /** @var Iterator<TValue> $it */
-    return $it;
+    if ($input instanceof Iterator) {
+        return $input;
+    }
+
+    if ($input instanceof IteratorAggregate) {
+        /** @var iterable<TValue> $it */
+        $it = $input->getIterator();
+        return iterable_to_iterator($it);
+    }
+
+    if (is_callable($input)) {
+        return new LazyRewindableIterator($input);
+    }
+
+    return new IteratorIterator($input);
 }

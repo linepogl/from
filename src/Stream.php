@@ -35,12 +35,10 @@ class Stream implements Streamable
         return $this->iterator;
     }
 
-    /**
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function evaluate(): Streamable
     {
-        return $this->iterator instanceof ArrayIterator ? $this : Stream::from($this->toArray());
+        return $this->iterator instanceof ArrayIterator ? $this : self::from($this->toArray());
     }
 
     /**
@@ -50,7 +48,7 @@ class Stream implements Streamable
      */
     public static function from(iterable $input): self
     {
-        return $input instanceof Stream ? $input : new self($input);
+        return $input instanceof self ? $input : new self($input);
     }
 
     /**
@@ -69,6 +67,7 @@ class Stream implements Streamable
     public static function empty(): Streamable
     {
         static $empty = new self([]);
+
         return $empty;
     }
 
@@ -82,7 +81,7 @@ class Stream implements Streamable
     {
         return self::lazy(static function () use ($firstElement, $getNext): iterable {
             $i = 0;
-            for ($x = $firstElement; ; $x = $getNext($x, $i++)) {
+            for ($x = $firstElement;; $x = $getNext($x, $i++)) {
                 yield $x;
             }
         });

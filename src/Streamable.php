@@ -18,6 +18,17 @@ interface Streamable extends IteratorAggregate
     public function toArray(): array;
 
     /**
+     * @return self<TValue>
+     */
+    public function evaluate(): self;
+
+    /**
+     * @param callable(TValue, mixed): void $callback
+     * @return self<TValue>
+     */
+    public function foreach(callable $callback): self;
+
+    /**
      * @template TResult
      * @param callable(TValue, mixed): TResult $mapper
      * @param ?callable(TValue, mixed): mixed $keyMapper:
@@ -43,7 +54,7 @@ interface Streamable extends IteratorAggregate
 
     /**
      * @template TResult
-     * @param callable(TValue, mixed): TResult $mapper
+     * @param callable(TValue, mixed): iterable<TResult> $mapper
      * @return self<TResult>
      */
     public function flatMap(callable $mapper): self;
@@ -138,5 +149,5 @@ interface Streamable extends IteratorAggregate
      * @param callable(TValue, mixed): mixed $hasher
      * @return Streamable<Streamable<TValue>>
      */
-    public function groupBy(callable $hasher): Streamable;
+    public function groupBy(callable $hasher): self;
 }

@@ -17,9 +17,7 @@ trait StreamableTrait
      */
     abstract public function getIterator(): Traversable;
 
-    /**
-     * @return array<TValue>
-     */
+    /** {@inheritdoc} */
     public function toArray(): array
     {
         $r = [];
@@ -30,12 +28,24 @@ trait StreamableTrait
         return $r;
     }
 
-    /**
-     * @template TResult
-     * @param callable(TValue, mixed): TResult $mapper
-     * @param ?callable(TValue, mixed): mixed $keyMapper:
-     * @return Streamable<TResult>
-     */
+    /** {@inheritdoc} */
+    public function evaluate(): Streamable
+    {
+        return Stream::from($this->toArray());
+    }
+
+
+    /** {@inheritdoc} */
+    public function foreach(callable $callback): Streamable
+    {
+        foreach ($this->getIterator() as $key => $value) {
+            $callback($value, $key);
+        }
+
+        return $this;
+    }
+
+    /** {@inheritdoc} */
     public function map(callable $mapper, ?callable $keyMapper = null): Streamable
     {
         return Stream::lazy(function () use ($mapper, $keyMapper): iterable {
@@ -51,10 +61,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param callable(TValue, mixed): mixed $keyMapper:
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function mapKeys(callable $keyMapper): Streamable
     {
         return Stream::lazy(function () use ($keyMapper): iterable {
@@ -64,9 +71,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function values(): Streamable
     {
         return Stream::lazy(function (): iterable {
@@ -76,9 +81,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @return Streamable<int|string>
-     */
+    /** {@inheritdoc} */
     public function keys(): Streamable
     {
         return Stream::lazy(function (): iterable {
@@ -88,11 +91,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @template TResult
-     * @param callable(TValue, mixed): TResult $mapper
-     * @return Streamable<TResult>
-     */
+    /** {@inheritdoc} */
     public function flatMap(callable $mapper): Streamable
     {
         return Stream::lazy(function () use ($mapper): iterable {
@@ -105,10 +104,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param iterable<TValue> $other
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function merge(iterable $other): Streamable
     {
         return Stream::lazy(function () use ($other): iterable {
@@ -131,10 +127,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param TValue $element
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function append(mixed $element): Streamable
     {
         return Stream::lazy(function () use ($element): iterable {
@@ -145,10 +138,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param callable(TValue, mixed): bool $predicate
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function filter(callable $predicate): Streamable
     {
         return Stream::lazy(function () use ($predicate): iterable {
@@ -160,9 +150,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function compact(): Streamable
     {
         return Stream::lazy(function (): iterable {
@@ -174,10 +162,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param callable(TValue, mixed): bool $predicate
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function reject(callable $predicate): Streamable
     {
         return Stream::lazy(function () use ($predicate): iterable {
@@ -189,13 +174,10 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param ?callable(TValue, mixed): (int|string) $hasher
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function unique(?callable $hasher = null): Streamable
     {
-        $hasher ??= static fn ($value) => is_int($value) ? $value : strval($value);
+        $hasher ??= static fn ($value) => is_int($value) ? $value : (string) $value;
 
         return Stream::lazy(function () use ($hasher): iterable {
             $seen = [];
@@ -209,10 +191,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param int $howMany
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function take(int $howMany): Streamable
     {
         return Stream::lazy(function () use ($howMany): iterable {
@@ -226,10 +205,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param int $howMany
-     * @return Streamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function skip(int $howMany): Streamable
     {
         return Stream::lazy(function () use ($howMany): iterable {
@@ -243,10 +219,7 @@ trait StreamableTrait
         });
     }
 
-    /**
-     * @param ?callable(TValue, mixed): bool $predicate
-     * @return ?TValue
-     */
+    /** {@inheritdoc} */
     public function first(?callable $predicate = null): mixed
     {
         if ($predicate !== null) {
@@ -264,10 +237,7 @@ trait StreamableTrait
         return null;
     }
 
-    /**
-     * @param callable(TValue, mixed): bool $predicate
-     * @return bool
-     */
+    /** {@inheritdoc} */
     public function any(callable $predicate): bool
     {
         foreach ($this->getIterator() as $key => $value) {
@@ -279,10 +249,7 @@ trait StreamableTrait
         return false;
     }
 
-    /**
-     * @param callable(TValue, mixed): bool $predicate
-     * @return bool
-     */
+    /** {@inheritdoc} */
     public function all(callable $predicate): bool
     {
         foreach ($this->getIterator() as $key => $value) {
@@ -294,12 +261,7 @@ trait StreamableTrait
         return true;
     }
 
-    /**
-     * @template TResult
-     * @param callable(TResult, TValue): TResult $operator
-     * @param TResult $default
-     * @return TResult
-     */
+    /** {@inheritdoc} */
     public function reduce(callable $operator, mixed $default = null): mixed
     {
         $r = $default;
@@ -314,7 +276,7 @@ trait StreamableTrait
     {
         $r = '';
         foreach ($this->getIterator() as $value) {
-            /** @phpstan-ignore-next-line because it fails when TValue is not string-able */
+            // @phpstan-ignore-next-line because it fails when TValue is not string-able
             $r .= $separator . $value;
         }
 
@@ -340,26 +302,19 @@ trait StreamableTrait
 
         $r = 0;
         foreach ($it as $ignored) {
-            $r++;
+            ++$r;
         }
 
         return $r;
     }
 
-    /**
-     * @template TComparable
-     * @param callable(TValue, mixed): TComparable $hasher
-     * @return OrderedStreamable<TValue>
-     */
+    /** {@inheritdoc} */
     public function orderBy(callable $hasher, bool $desc = false): OrderedStreamable
     {
         return new OrderedStream($this, $hasher, $desc);
     }
 
-    /**
-     * @param callable(TValue, mixed): mixed $hasher
-     * @return Streamable<Streamable<TValue>>
-     */
+    /** {@inheritdoc} */
     public function groupBy(callable $hasher): Streamable
     {
         return Stream::lazy(function () use ($hasher): iterable {
