@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace From;
 
-use ArrayIterator;
 use Traversable;
 
 /**
@@ -295,17 +294,7 @@ trait StreamableTrait
 
     public function count(): int
     {
-        $it = $this->getIterator();
-        if ($it instanceof ArrayIterator) {
-            return $it->count();
-        }
-
-        $r = 0;
-        foreach ($it as $ignored) {
-            ++$r;
-        }
-
-        return $r;
+        return iterator_count($this->getIterator());
     }
 
     /** {@inheritdoc} */
