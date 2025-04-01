@@ -32,8 +32,8 @@ const RULES = [
     'no_useless_return'                          => true,
 ];
 
-return (new PhpCsFixer\Config())
+return new PhpCsFixer\Config()
     ->setCacheFile(CACHE)
     ->setRiskyAllowed(true)
     ->setRules(RULES)
-    ->setFinder((new PhpCsFixer\Finder())->in(PATHS));
+    ->setFinder(new PhpCsFixer\Finder()->in(PATHS));

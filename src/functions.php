@@ -37,12 +37,12 @@ function iterable_to_iterator(iterable $input): Iterator
     }
 
     if ($input instanceof IteratorAggregate) {
-        /** @var iterable<TValue> $it */
-        $it = $input->getIterator();
-        return iterable_to_iterator($it);
+        /** @phpstan-ignore-next-line return.type -- best effort */
+        return iterable_to_iterator($input->getIterator());
     }
 
     if (is_callable($input)) {
+        /** @phpstan-ignore-next-line return.type -- best effort */
         return new LazyRewindableIterator($input);
     }
 

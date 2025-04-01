@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace From;
 
 use IteratorAggregate;
+use Override;
 
 /**
  * @template TValue
- * @extends IteratorAggregate<int|string, TValue>
+ * @extends IteratorAggregate<array-key, TValue>
  */
 interface Streamable extends IteratorAggregate
 {
     /**
-     * @return array<int|string, TValue>
+     * @return array<TValue>
      */
     public function toArray(): array;
 
@@ -30,14 +31,16 @@ interface Streamable extends IteratorAggregate
 
     /**
      * @template TResult
-     * @param callable(TValue, mixed): TResult $mapper
-     * @param ?callable(TValue, mixed): mixed $keyMapper:
+     * @template TResultKey
+     * @param callable(TValue, array-key): TResult $mapper
+     * @param ?callable(TValue, array-key): TResultKey $keyMapper:
      * @return self<TResult>
      */
     public function map(callable $mapper, ?callable $keyMapper = null): self;
 
     /**
-     * @param callable(TValue, mixed): mixed $keyMapper:
+     * @template TResultKey
+     * @param callable(TValue, array-key): TResultKey $keyMapper:
      * @return self<TValue>
      */
     public function mapKeys(callable $keyMapper): self;
@@ -48,19 +51,19 @@ interface Streamable extends IteratorAggregate
     public function values(): self;
 
     /**
-     * @return self<int|string>
+     * @return self<array-key>
      */
     public function keys(): self;
 
     /**
      * @template TResult
-     * @param callable(TValue, mixed): iterable<TResult> $mapper
+     * @param callable(TValue, array-key): iterable<TResult> $mapper
      * @return self<TResult>
      */
     public function flatMap(callable $mapper): self;
 
     /**
-     * @param iterable<int|string, TValue> $other
+     * @param iterable<TValue> $other
      * @return self<TValue>
      */
     public function merge(iterable $other): self;
@@ -72,7 +75,7 @@ interface Streamable extends IteratorAggregate
     public function append(mixed $element): self;
 
     /**
-     * @param callable(TValue, mixed): bool $predicate
+     * @param callable(TValue, array-key): bool $predicate
      * @return self<TValue>
      */
     public function filter(callable $predicate): self;
@@ -83,13 +86,13 @@ interface Streamable extends IteratorAggregate
     public function compact(): self;
 
     /**
-     * @param callable(TValue, mixed): bool $predicate
+     * @param callable(TValue, array-key): bool $predicate
      * @return self<TValue>
      */
     public function reject(callable $predicate): self;
 
     /**
-     * @param ?callable(TValue, mixed): (int|string) $hasher
+     * @param ?callable(TValue, array-key): array-key $hasher
      * @return self<TValue>
      */
     public function unique(?callable $hasher = null): self;
@@ -107,19 +110,37 @@ interface Streamable extends IteratorAggregate
     public function skip(int $howMany): self;
 
     /**
-     * @param ?callable(TValue, mixed): bool $predicate
-     * @return ?TValue
+     * @param ?callable(TValue, array-key): bool $predicate
+     * @return TValue
      */
     public function first(?callable $predicate = null): mixed;
 
     /**
-     * @param callable(TValue, mixed): bool $predicate
+     * @param ?callable(TValue, array-key): bool $predicate
+     * @return ?TValue
+     */
+    public function firstOrNull(?callable $predicate = null): mixed;
+
+    /**
+     * @param ?callable(TValue, array-key): bool $predicate
+     * @return TValue
+     */
+    public function last(?callable $predicate = null): mixed;
+
+    /**
+     * @param ?callable(TValue, array-key): bool $predicate
+     * @return ?TValue
+     */
+    public function lastOrNull(?callable $predicate = null): mixed;
+
+    /**
+     * @param callable(TValue, array-key): bool $predicate
      * @return bool
      */
     public function any(callable $predicate): bool;
 
     /**
-     * @param callable(TValue, mixed): bool $predicate
+     * @param callable(TValue, array-key): bool $predicate
      * @return bool
      */
     public function all(callable $predicate): bool;
@@ -140,13 +161,13 @@ interface Streamable extends IteratorAggregate
 
     /**
      * @template TComparable
-     * @param callable(TValue, mixed): TComparable $hasher
+     * @param callable(TValue, array-key): TComparable $hasher
      * @return OrderedStreamable<TValue>
      */
     public function orderBy(callable $hasher, bool $desc = false): OrderedStreamable;
 
     /**
-     * @param callable(TValue, mixed): mixed $hasher
+     * @param callable(TValue, array-key): array-key $hasher
      * @return Streamable<Streamable<TValue>>
      */
     public function groupBy(callable $hasher): self;

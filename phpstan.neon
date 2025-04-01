@@ -1,8 +1,11 @@
 parameters:
+  editorUrl: ''
+  editorUrlTitle: '%%file%%:%%line%%'
+  checkMissingOverrideMethodAttribute: true
   parallel:
   	maximumNumberOfProcesses: 4
   	minimumNumberOfJobsPerProcess: 1
-  level: 9
+  level: 10
   paths:
     - src
     - tst

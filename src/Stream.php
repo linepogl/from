@@ -6,6 +6,8 @@ namespace From;
 
 use ArrayIterator;
 use Iterator;
+use Override;
+use Traversable;
 
 /**
  * @template TValue
@@ -27,15 +29,13 @@ class Stream implements Streamable
         $this->iterator = iterable_to_iterator($input);
     }
 
-    /**
-     * @return Iterator<TValue>
-     */
-    public function getIterator(): Iterator
+    #[Override]
+    public function getIterator(): Traversable
     {
         return $this->iterator;
     }
 
-    /** {@inheritdoc} */
+    #[Override]
     public function evaluate(): Streamable
     {
         return $this->iterator instanceof ArrayIterator ? $this : self::from($this->toArray());
@@ -68,6 +68,7 @@ class Stream implements Streamable
     {
         static $empty = new self([]);
 
+        /** @var Streamable<TValue> $empty */
         return $empty;
     }
 

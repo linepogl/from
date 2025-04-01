@@ -6,6 +6,7 @@ namespace From;
 
 use Generator;
 use Iterator;
+use Override;
 use RuntimeException;
 
 /**
@@ -28,6 +29,7 @@ class LazyRewindableIterator implements Iterator
         $this->lazyIterable = $lazyIterable;
     }
 
+    #[Override]
     public function rewind(): void
     {
         if ($this->iterator === null || $this->iterator instanceof Generator) {
@@ -37,6 +39,7 @@ class LazyRewindableIterator implements Iterator
         $this->iterator->rewind();
     }
 
+    #[Override]
     public function current(): mixed
     {
         if ($this->iterator === null) {
@@ -45,6 +48,7 @@ class LazyRewindableIterator implements Iterator
         return $this->iterator->current();
     }
 
+    #[Override]
     public function next(): void
     {
         if ($this->iterator === null) {
@@ -54,6 +58,7 @@ class LazyRewindableIterator implements Iterator
         $this->iterator->next();
     }
 
+    #[Override]
     public function key(): mixed
     {
         if ($this->iterator === null) {
@@ -63,6 +68,7 @@ class LazyRewindableIterator implements Iterator
         return $this->iterator->key();
     }
 
+    #[Override]
     public function valid(): bool
     {
         if ($this->iterator === null) {

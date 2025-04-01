@@ -92,7 +92,7 @@ final class StreamTest extends TestCase
     {
         $this->assertSame([], from([])->take(0)->toArray());
         $this->assertSame([0 => 0, 1 => 1], from([0, 1, 2, 3, 4])->take(2)->toArray());
-        $this->assertSame([0, 1], array_values(from([0, 1, 2, 3, 4])->take(2)->toArray()));
+        $this->assertSame([0, 1], from([0, 1, 2, 3, 4])->take(2)->toArray());
     }
 
     public function test_skip(): void
@@ -184,10 +184,64 @@ final class StreamTest extends TestCase
         $this->assertSame([0, 'a' => 2, 1, 3 => 3], from([0, 'a' => 2, 1, 2, 'b' => 2, 3])->unique()->toArray());
     }
 
-    public function test_first(): void
+    public function test_first_or_null(): void
     {
-        $this->assertNull(from([])->first());
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
+        $this->assertNull(from([])->firstOrNull());
         $this->assertSame(3, from([3, 2, 1, 0])->first());
+        $this->assertSame(2, from([3, 2, 1, 0])->first(fn ($x) => $x < 3));
+        $this->assertSame(2, from([3, 2, 1, 0])->first(fn ($x, $k) => $k > 0));
+        $this->assertSame(3, from([3, 2, 1, 0])->firstOrNull());
+        $this->assertSame(2, from([3, 2, 1, 0])->firstOrNull(fn ($x) => $x < 3));
+        $this->assertSame(2, from([3, 2, 1, 0])->firstOrNull(fn ($x, $k) => $k > 0));
+    }
+
+    public function test_first_exception_1(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([])->first();
+    }
+
+    public function test_first_exception_2(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([1,2,3])->first(fn ($x) => $x === -1);
+    }
+
+    public function test_first_exception_3(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([1,2,3])->first(fn ($x, $k) => $k === -1);
+    }
+
+    public function test_last_or_null(): void
+    {
+        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
+        $this->assertNull(from([])->lastOrNull());
+        $this->assertSame(0, from([3, 2, 1, 0])->last());
+        $this->assertSame(1, from([3, 2, 1, 0])->last(fn ($x) => $x > 0));
+        $this->assertSame(2, from([3, 2, 1, 0])->last(fn ($x, $k) => $k < 2));
+        $this->assertSame(0, from([3, 2, 1, 0])->lastOrNull());
+        $this->assertSame(1, from([3, 2, 1, 0])->lastOrNull(fn ($x) => $x > 0));
+        $this->assertSame(2, from([3, 2, 1, 0])->lastOrNull(fn ($x, $k) => $k < 2));
+    }
+
+    public function test_last_exception_1(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([])->last();
+    }
+
+    public function test_last_exception_2(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([1,2,3])->last(fn ($x) => $x === -1);
+    }
+
+    public function test_last_exception_3(): void
+    {
+        $this->expectException(OutOfBoundsException::class);
+        from([1,2,3])->last(fn ($x, $k) => $k === -1);
     }
 
     public function test_reduce(): void

@@ -12,9 +12,15 @@ class Dog
 }
 
 /**
- * @extends Stream<Dog>
+ * @template T
+ * @extends Stream<T>
  */
-class DogStream extends Stream
+abstract class AnimalStream extends Stream
+{
+}
+
+/** @extends AnimalStream<Dog> */
+class DogStream extends AnimalStream
 {
 }
 
@@ -37,6 +43,7 @@ class CatStream implements Streamable
         $this->array = [new Cat(), new Cat(), new Cat()];
     }
 
+    #[Override]
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->array);
@@ -57,5 +64,16 @@ final class StreamableTraitTest extends TestCase
     public function test_uses_trait(): void
     {
         $this->assertCount(3, new CatStream());
+
+        $a = new CatStream();
+        $a->first();
+    }
+
+    /**
+     * @return AnimalStream<Dog>
+     */
+    public function getDogStream(): AnimalStream
+    {
+        return new DogStream([new Dog()]);
     }
 }
