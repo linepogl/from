@@ -6,7 +6,6 @@ namespace From;
 
 use OutOfBoundsException;
 use Override;
-use Traversable;
 
 /**
  * @template TValue

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace From;
 
 use IteratorAggregate;
-use Override;
 
 /**
  * @template TValue
